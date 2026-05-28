@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 240 10% 3.9%;
+  --foreground: 0 0% 98%;
+  --card: 240 10% 4.9%;
+  --card-foreground: 0 0% 98%;
+  --popover: 240 10% 3.9%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 45 92% 47%; /* Warm amber */
+  --primary-foreground: 240 5.9% 10%;
+  --secondary: 240 3.7% 15.9%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 240 3.7% 15.9%;
+  --muted-foreground: 240 5% 64.9%;
+  --accent: 240 3.7% 15.9%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 3.7% 15.9%;
+  --input: 240 3.7% 15.9%;
+  --ring: 45 92% 47%;
+  --radius: 1.25rem;
+}
+
+body {
+  @apply bg-background text-foreground antialiased selection:bg-primary/30 selection:text-white;
+  font-family: var(--font-manrope), sans-serif;
+  letter-spacing: -0.01em;
+}
+
+h1, h2, h3, h4, .font-serif {
+  font-family: var(--font-fraunces), serif;
+  letter-spacing: -0.03em;
+}
+
+p, li, input, button, label, select, textarea {
+  letter-spacing: -0.005em;
+}
+
+.glass {
+  @apply bg-white/5 backdrop-blur-3xl border border-white/10 shadow-2xl;
+}
+
+.premium-border {
+  @apply border border-white/10 hover:border-primary/50 transition-colors duration-500;
+}
+
+.glow-primary {
+  @apply shadow-[0_0_20px_rgba(245,158,11,0.24)];
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
