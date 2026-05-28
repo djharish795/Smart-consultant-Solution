@@ -1,213 +1,124 @@
-# ValuationStudio — AI-Powered Valuation Report Generator
+# 🌟 Smart Consultant Solution — Core Engine
 
-> **Intelligence Layer 4.6** — Empowered by Claude Sonnet AI & High-Fidelity Rendering
-
-ValuationStudio is a Next.js AI application that automates the generation of professional property valuation reports. It digitally reconstructs any uploaded report template, extracts legal data from Telugu Sale Deeds using Claude, and produces a fully formatted, bank-ready output — in minutes.
-
----
-
-## ✨ Features
-
-- **Template Digital Twin** — Upload any previous bank-authorized PDF report; AI reconstructs its exact layout as a Tailwind-based HTML template
-- **Telugu Sale Deed Extraction** — Automatically parses scanned/PDFs deeds (including handwritten Telugu) to extract party names, property dimensions, survey numbers, and financials
-- **Automated Financial Mathematics** — Enters market rate & government rate once; all area calculations, values, and deductions are computed automatically
-- **AI Intelligence Review** — Editable form pre-filled by AI before the final report is generated
-- **One-click Report Export** — Generates a pixel-perfect HTML report matching the original template's style
+> **AI-Powered Property Valuation & Telugu Sale Deed Analysis Studio**
+>
+> *Leveraging Claude AI models, Next.js, and Supabase for seamless report generation, legal document parsing, and bank-ready valuation synthesis.*
 
 ---
 
-## 🗂 Project Structure
+## ✨ Key Features
+
+- **📂 Template Digital Twin**: Reconstructs standard bank-authorized PDF/image templates into custom HTML layouts.
+- **📄 Telugu Sale Deed Parsing**: Powered by Claude's multi-modal intelligence, automatically extracts legal data from scanned, handwritten, or digital Telugu Sale Deeds.
+- **🧮 Automatic Financial Mathematics**: Inputs base and government rates; automatically computes all dimensions, area totals, valuations, deductions, and schedules.
+- **⚡ Interactive Credit & Limit Tracking**: Real-time credits tracking using Supabase backend authentication and profiles.
+- **🔒 Secure Supabase Backend**: Integrated User Auth, Profile syncing, and historical report preservation using secure PostgreSQL databases.
+- **🖨️ Bank-Ready Export**: Produces high-fidelity, printable PDF/HTML reports mimicking institutional layouts exactly.
+
+---
+
+## 🗂 Project Architecture
 
 ```
-valuation-report-gen/
+smart-consultant-core/
 ├── src/
 │   ├── app/
-│   │   ├── page.tsx                    # Main 4-step workflow UI
-│   │   ├── layout.tsx                  # Root layout & global fonts
-│   │   ├── globals.css                 # Global styles & design tokens
-│   │   └── api/
-│   │       ├── analyze-template/       # POST: Analyze report template image → Tailwind HTML + data schema
-│   │       ├── extract-data/           # POST: Extract data from Telugu deed PDF → JSON
-│   │       └── generate-report/        # POST: Merge data + template → Final HTML report
+│   │   ├── (dashboard)/                # Dashboard views (Archive, Profile, Pricing, Settings)
+│   │   ├── api/
+│   │   │   ├── analyze-template/       # POST: Reconstructs layout and outputs template JSON
+│   │   │   ├── extract-data/           # POST: Extracts property info from Telugu PDF/Image
+│   │   │   └── generate-report/        # POST: Generates beautiful HTML/PDF from data
+│   │   ├── login/                      # Supabase SSR User Authentication flow
+│   │   ├── globals.css                 # Root styles, Tailwind imports, and design tokens
+│   │   └── layout.tsx                  # Global fonts, provider setup, and layout wrapper
 │   ├── components/
-│   │   ├── ValuationForm.tsx           # Editable data review form (Step 4)
-│   │   └── FileUploader.tsx            # Drag-and-drop file upload component
+│   │   ├── CreditTracker.tsx           # Tracks and displays remaining credits in real time
+│   │   ├── FileUploader.tsx            # Drag-and-drop document acquisition panel
+│   │   ├── ValuationForm.tsx           # Editable smart-data review form
+│   │   └── Header.tsx                  # Clean global navigation & branding
 │   └── lib/
-│       ├── utils.ts                    # Tailwind class merging utilities
-│       └── cache-utils.ts              # Server-side caching helpers
-├── public/
-│   └── favicon.ico
-├── .env.local                          # Environment variables (API keys)
-├── .env.example                        # Template for environment setup
-├── package.json
-├── tailwind.config.ts
-└── tsconfig.json
+│       ├── supabase/                   # Supabase server & client configuration (SSR-safe)
+│       ├── cache-utils.ts              # Server-side data caching strategies
+│       └── utils.ts                    # Dynamic Tailwind class merging helpers
+├── public/                             # Public icons, favicons, and images
+├── supabase-schema.sql                 # Complete database schema (tables, policies, triggers)
+├── tailwind.config.ts                  # Tailwind theme, typography, and styling config
+├── tsconfig.json                       # TypeScript compiler options
+└── package.json                        # Node.js project manifests & dependencies
 ```
+
+---
+
+## 💾 Database Schema (Supabase / PostgreSQL)
+
+Smart Consultant Core uses a secure PostgreSQL database on Supabase. Apply `supabase-schema.sql` to your Supabase SQL editor:
+
+### `profiles` Table
+Stores user profile information, pricing plans, and remaining API credits.
+*   **RLS Policies**: Users can select all profiles, but insert/update only their own.
+*   **Auto-Trigger**: Automatically populates profile records upon new user signup.
+
+### `reports` Table
+Preserves generated valuation templates, historical extraction data, and statuses.
+*   **RLS Policies**: Restricts read/write access strictly to the owner.
 
 ---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
+- **Node.js** (v18.0.0 or higher)
+- **npm** (v9.0.0 or higher)
+- **Anthropic API Key** (from [console.anthropic.com](https://console.anthropic.com))
+- **Supabase Project** (from [supabase.com](https://supabase.com))
 
-- **Node.js** v18+
-- **npm** v9+
-- An **Anthropic API key** (get one at [console.anthropic.com](https://console.anthropic.com))
+---
 
 ### 1. Clone the Repository
-
 ```bash
-git clone https://github.com/LokeshSaiSri/valuation_report_ai.git
-cd valuation_report_ai
+git clone https://github.com/djharish795/Smart-consultant-Solution.git
+cd "Smart-consultant-Solution/Smart consultant core"
 ```
 
 ### 2. Install Dependencies
-
 ```bash
 npm install
 ```
 
-### 3. Configure Environment Variables
-
-Copy the example env file and add your API key:
-
-```bash
-cp .env.example .env.local
-```
-
-Then edit `.env.local`:
+### 3. Environment Variables Config
+Create a `.env` file in the root of the project:
 
 ```env
+# Anthropic Claude Configuration
 ANTHROPIC_API_KEY=your_anthropic_api_key_here
-CLAUDE_MODEL=claude-sonnet-4-6
+CLAUDE_MODEL=claude-3-5-sonnet-latest
+
+# Supabase Server and Client Keys
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anonymous-public-key
 ```
 
-### 4. Run the Development Server
-
+### 4. Run Development Server
 ```bash
 npm run dev
 ```
-
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
----
-
-## ⚙️ Environment Variables
-
-| Variable | Required | Description |
-|---|---|---|
-| `ANTHROPIC_API_KEY` | ✅ Yes | Your Anthropic API key from [console.anthropic.com](https://console.anthropic.com) |
-| `CLAUDE_MODEL` | Optional | Claude model to use. Defaults to `claude-sonnet-4-6` |
+Open [http://localhost:3000](http://localhost:3000) to see the application in action.
 
 ---
 
-## 🔄 Workflow — How It Works
-
-```
-Step 1: Template Upload
-  └─ Upload a reference valuation report (PDF/image)
-  └─ AI analyzes layout, branding, and structure
-  └─ Generates a Tailwind HTML digital twin + data schema
-
-Step 2: Sale Deed Acquisition
-  └─ Upload the Telugu Sale Deed (scanned PDF or image)
-  └─ Stored for AI-powered extraction
-
-Step 3: Base Rate Input
-  └─ Enter current Market Rate (₹ per sq yard/ft)
-  └─ Enter Government Rate
-  └─ AI extracts all other data and computes financials automatically
-
-Step 4: Intelligence Review & Export
-  └─ Review and edit AI-extracted data in an editable form
-  └─ Generate the final pixel-perfect valuation report
-```
-
----
-
-## 🛠 Tech Stack
-
-| Layer | Technology |
-|---|---|
-| **Framework** | [Next.js 14](https://nextjs.org) (App Router) |
-| **Language** | TypeScript |
-| **Styling** | Tailwind CSS v3 |
-| **AI Engine** | [Anthropic Claude](https://anthropic.com) via `@anthropic-ai/sdk` |
-| **Forms** | React Hook Form |
-| **Icons** | Lucide React |
-| **UI Utilities** | clsx, tailwind-merge |
-
----
-
-## 📡 API Routes
-
-### `POST /api/analyze-template`
-Analyzes an uploaded report template image and returns a Tailwind HTML layout + JSON data schema.
-
-**Body:**
-```json
-{ "imageUrl": "<base64 data URL of the template image>" }
-```
-
-**Response:**
-```json
-{
-  "tailwindTemplate": "<html string with Tailwind classes>",
-  "dataSchema": [{ "key": "field_name", "label": "Field Label", "type": "text" }]
-}
-```
-
----
-
-### `POST /api/extract-data`
-Extracts property and financial data from a Telugu sale deed PDF.
-
-**Body:**
-```json
-{
-  "pdfUrl": "<base64 data URL of the deed PDF>",
-  "schema": [...],
-  "baseRates": { "marketRate": "5000", "governmentRate": "3200" }
-}
-```
-
-**Response:** JSON object matching the data schema fields.
-
----
-
-### `POST /api/generate-report`
-Merges extracted data into the Tailwind template and returns a final HTML report.
-
-**Body:**
-```json
-{
-  "template": "<tailwind html string>",
-  "data": { "field_name": "value", ... }
-}
-```
-
-**Response:** `text/html` — the final rendered report.
-
----
-
-## 🏗 Available Scripts
+## ⚙️ Available Commands
 
 | Command | Description |
-|---|---|
-| `npm run dev` | Start development server at `localhost:3000` |
-| `npm run build` | Build production bundle |
-| `npm run start` | Run production server |
-| `npm run lint` | Run ESLint |
+| :--- | :--- |
+| `npm run dev` | Spins up the development server on `localhost:3000` |
+| `npm run build` | Compiles production-optimized code |
+| `npm run start` | Runs the compiled production server |
+| `npm run lint` | Analyzes code quality using ESLint |
 
 ---
 
-## 📝 License
+## 📄 License & Maintainer
 
-Private project — All rights reserved © 2026 Naprocs.
-
----
-
-## 👤 Author
-
-**Lokesh Sai Sri Ganapaneni**  
-Built for: Naprocs Client Projects
+- **Developer**: [djharish795](https://github.com/djharish795)
+- **Status**: Active Client Project
+- **License**: Private / Proprietary — All rights reserved © 2026.
