@@ -45,6 +45,11 @@ export async function POST(req: NextRequest) {
       
       // Clean up any remaining unsubstituted ${fieldName} placeholders so they don't print raw
       finalHtml = finalHtml.replace(/\$\{[^}]+\}/g, "");
+      
+      // Clean up empty paragraphs, divs, or excessive breaks that might cause unnecessary spaces between tables
+      finalHtml = finalHtml.replace(/<p[^>]*>\s*<\/p>/gi, "");
+      finalHtml = finalHtml.replace(/<div[^>]*>\s*<\/div>/gi, "");
+      finalHtml = finalHtml.replace(/(<br\s*\/?>\s*){2,}/gi, "<br/>");
     }
 
     // Launch headless browser

@@ -67,11 +67,30 @@ export default function ValuationForm({ initialData, schema, template }: Valuati
   const onSubmit = async (formData: any) => {
     setIsGenerating(true);
     try {
+      const toUpperCaseRecursively = (obj: any): any => {
+        if (typeof obj === 'string') {
+          return obj.toUpperCase();
+        }
+        if (Array.isArray(obj)) {
+          return obj.map(toUpperCaseRecursively);
+        }
+        if (obj !== null && typeof obj === 'object') {
+          const newObj: any = {};
+          for (const key in obj) {
+            newObj[key] = toUpperCaseRecursively(obj[key]);
+          }
+          return newObj;
+        }
+        return obj;
+      };
+
+      const upperCaseFormData = toUpperCaseRecursively(formData);
+
       const response = await fetch("/api/generate-report", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-          data: formData,
+          data: upperCaseFormData,
           template: template 
         }),
       });
@@ -150,7 +169,7 @@ export default function ValuationForm({ initialData, schema, template }: Valuati
                 <input 
                   type={field.type === 'number' ? 'text' : field.type}
                   {...register(field.name as any)} 
-                  className="w-full bg-transparent text-lg font-bold outline-none placeholder:text-white/5"
+                  className="w-full bg-transparent text-lg font-bold outline-none placeholder:text-white/5 uppercase"
                   placeholder="-"
                 />
               </div>

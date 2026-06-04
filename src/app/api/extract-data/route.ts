@@ -207,6 +207,26 @@ export async function POST(req: NextRequest) {
       throw new Error("Extracted data is null");
     }
 
+    // Convert all string values to upper case as requested by the client
+    const toUpperCaseRecursively = (obj: any): any => {
+      if (typeof obj === 'string') {
+        return obj.toUpperCase();
+      }
+      if (Array.isArray(obj)) {
+        return obj.map(toUpperCaseRecursively);
+      }
+      if (obj !== null && typeof obj === 'object') {
+        const newObj: any = {};
+        for (const key in obj) {
+          newObj[key] = toUpperCaseRecursively(obj[key]);
+        }
+        return newObj;
+      }
+      return obj;
+    }
+
+    extractedData = toUpperCaseRecursively(extractedData);
+
     // Save to Supabase Archive & Deduct Credits
     try {
       if (user) {

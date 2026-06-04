@@ -36,7 +36,6 @@ export default function CreditTracker() {
       }
       setStats({ spent: totalCost, count });
 
-      // Clean up previous realtime channel if we are subscribing again
       if (subscription) {
         supabase.removeChannel(subscription);
       }

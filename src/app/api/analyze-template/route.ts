@@ -106,6 +106,7 @@ export async function POST(req: NextRequest) {
          - For any layout that looks like a table or list of key-value pairs (e.g. schedules, boundaries, measurements), you MUST use proper HTML <table>, <tr>, <th>, and <td> elements.
          - DO NOT use flexbox or grid for tables.
          - Ensure explicit borders are applied where they exist in the original (e.g., class="border border-black px-2 py-1"). If the original has grid lines, you must reproduce them structurally.
+         - CRITICAL: STRICTLY REMOVE ANY UNNECESSARY SPACES, MARGINS, OR PADDING BETWEEN TABLES. The output must have a tight, clear structure. Do not add spacing classes like \`mb-4\`, \`mt-8\`, \`my-8\`, or empty \`<br>\` or \`<p>\` tags between tables unless they are absolutely large and explicit in the reference document.
       6. **Efficient DOM Representation**: Do not repeat lengthy class strings on every single element. If a document uses the same table cell style 100 times, insert a <style type="text/tailwindcss"> block in the <head> and define a custom class using @apply. This is CRITICAL for speed and token limits. Use structural HTML wherever possible.
       7. **Elegant PDF Pagination**: 
          - Ensure tables break cleanly between pages.

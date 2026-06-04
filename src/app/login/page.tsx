@@ -1,5 +1,5 @@
 import React from "react";
-import { Bot, MoveRight } from "lucide-react";
+import { Compass, MoveRight } from "lucide-react";
 import { login } from "./actions";
 
 export default function LoginPage() {
@@ -15,12 +15,12 @@ export default function LoginPage() {
         <div className="glass p-10 rounded-[3rem] border-white/5 space-y-8 text-center shadow-2xl">
           <div className="flex justify-center">
             <div className="w-20 h-20 bg-primary rounded-[1.5rem] flex items-center justify-center shadow-2xl shadow-primary/40 glow-primary animate-float">
-              <Bot className="text-white w-10 h-10" />
+              <Compass className="text-white w-10 h-10" />
             </div>
           </div>
           
           <div className="space-y-2">
-            <h1 className="text-4xl font-serif font-black tracking-tight leading-none italic">Valuation<span className="text-primary not-italic">Studio</span></h1>
+            <h1 className="text-4xl font-serif font-black tracking-tight leading-none">Smart Consultants<span className="text-primary italic">Ai</span></h1>
             <p className="text-[10px] text-muted-foreground uppercase tracking-[0.4em] font-black opacity-60 mt-2">Secure Access Gateway</p>
           </div>
 
@@ -32,7 +32,6 @@ export default function LoginPage() {
                   type="email" 
                   name="email"
                   required
-                  defaultValue="valuer@bank.com"
                   className="w-full bg-white/5 p-4 rounded-2xl border border-white/10 outline-none focus:border-primary focus:bg-primary/5 transition-all text-sm font-medium"
                   placeholder="Enter your professional email"
                 />
@@ -43,7 +42,6 @@ export default function LoginPage() {
                   type="password" 
                   name="password"
                   required
-                  defaultValue="password"
                   className="w-full bg-white/5 p-4 rounded-2xl border border-white/10 outline-none focus:border-primary focus:bg-primary/5 transition-all text-sm font-medium"
                   placeholder="••••••••"
                 />
