@@ -5,6 +5,7 @@ import ValuationForm from "@/components/ValuationForm";
 import FileUploader from "@/components/FileUploader";
 import { Bot, ArrowRight, PanelsTopLeft, ScanSearch, Workflow, Sparkles, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
 
 export default function Home() {
   const [step, setStep] = useState(1);
@@ -29,9 +30,16 @@ export default function Home() {
       reader.onload = async () => {
         setLoadingText("Analyzing Page Layouts & Branding...");
         const base64 = reader.result as string;
+        const supabaseClient = createClient();
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        const token = session?.access_token;
+
         const response = await fetch("/api/analyze-template", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            ...(token ? { "Authorization": `Bearer ${token}` } : {})
+          },
           body: JSON.stringify({ imageUrl: base64 }),
         });
         
@@ -114,11 +122,17 @@ export default function Home() {
 
   const handleStartExtraction = async (pdfBase64?: string) => {
     setExtractionStatus("processing");
-    setLoadingText("Extracting Employee & Business Details...");
     try {
+      const supabaseClient = createClient();
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      const token = session?.access_token;
+
       const response = await fetch("/api/extract-data", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({ 
           pdfUrl: pdfBase64 || applicationBase64,
           schema: dataSchema,
