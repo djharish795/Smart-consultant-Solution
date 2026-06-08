@@ -44,8 +44,8 @@ export default async function ArchivePage() {
               
               <div className="flex items-center gap-8 w-full md:w-auto justify-between md:justify-end">
                 <div className="text-right">
-                  <p className="text-[10px] uppercase font-bold tracking-widest opacity-40">Valuation</p>
-                  <p className="font-mono font-bold text-lg text-primary">{item.valuation_sum || "N/A"}</p>
+                  <p className="text-[10px] uppercase font-bold tracking-widest opacity-40">Role / Job Title</p>
+                  <p className="font-mono font-bold text-sm text-primary">{item.valuation_sum || "N/A"}</p>
                 </div>
                 <div className="text-right hidden sm:block">
                   <p className="text-[10px] uppercase font-bold tracking-widest opacity-40">Status</p>
@@ -54,7 +54,7 @@ export default async function ArchivePage() {
                 <DownloadButton 
                   data={item.data} 
                   template={item.template} 
-                  surveyNumber={item.data?.surveyNumber} 
+                  applicantName={item.data?.applicantName} 
                 />
               </div>
             </div>
@@ -66,7 +66,7 @@ export default async function ArchivePage() {
             </div>
             <div>
               <h3 className="text-2xl font-bold mb-2">No Archives Found</h3>
-              <p className="text-muted-foreground">Your recent valuation reports will automatically appear here.</p>
+              <p className="text-muted-foreground">Your recent dossiers and reports will automatically appear here.</p>
             </div>
           </div>
         )}

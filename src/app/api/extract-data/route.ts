@@ -75,13 +75,13 @@ export async function POST(req: NextRequest) {
           const result = await mammoth.extractRawText({ buffer });
           extractedText = result.value;
         } catch (err) {
-          console.error("Failed to parse DOCX deed:", err);
+          console.error("Failed to parse DOCX application:", err);
           return NextResponse.json({ error: "Failed to parse DOCX document." }, { status: 400 });
         }
 
         contentBlocks.push({
           type: "text",
-          text: `Here is the raw text extracted from the Legal Sale Deed DOCX document: \n\n${extractedText}`
+          text: `Here is the raw text extracted from the DOCX application document: \n\n${extractedText}`
         });
       } else {
         console.warn(`Unknown media type in extract-data: ${mediaType}, attempting PDF fallback`);
@@ -108,53 +108,35 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const coreFields = ["ownerName", "surveyNumber", "propertyAddress", "marketValue", "distressValue"];
-    let finalSchema = schema ? [...schema] : [];
-    
-    // Ensure core fields are present in schema for UI binding
-    coreFields.forEach(field => {
-      if (schema && !schema.some((f: any) => f.name === field)) {
-        finalSchema.push({ 
-          name: field, 
-          label: field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()), 
-          type: "text" 
-        });
-      }
-    });
+    const schemaInstruction = schema && schema.length > 0
+      ? `Extract values for the following fields: ${JSON.stringify(schema.map((f: any) => ({ name: f.name, label: f.label, type: f.type, description: f.description })))}`
+      : "Extract all relevant fields, names, dates, amounts, and identifiers found in the document.";
 
-    const schemaInstruction = finalSchema.length > 0
-      ? `Extract and calculate the following fields: ${JSON.stringify(finalSchema)}`
-      : "Extract/Calculate: ownerName, surveyNumber, propertyAddress, propertyType, landValue, buildingValue, yearsAfterConstruction, marketValue, distressValue.";
-
-    const baseRateContext = baseRates 
-      ? `CONTEXT: The user has provided the following base rates:
-         - Market Rate: ${baseRates.marketRate} per sq unit
-         - Government Rate: ${baseRates.governmentRate} per sq unit
-         Use these rates to calculate total values (Total Value = Area * Rate) even if not mentioned in the deed.
-         If the deed has different values, prioritize the provided base rates for consistent valuation.`
-      : "";
 
     const response = await anthropic.messages.create({
       model: process.env.CLAUDE_MODEL || "claude-sonnet-4-6",
-      max_tokens: 64000, // Increased from 8000 to prevent truncation on large deeds
+      max_tokens: 64000, // Increased from 8000 to prevent truncation on large documents
       temperature: 0,
       system: [
         {
           type: "text",
-          text: `You are a Senior Financial Valuation Expert and Data Extraction Specialist.
-      
-      Your Goals:
-      1. EXACT DETAIL EXTRACTION: Extract *every single relevant detail* from the provided document (Telugu -> English). Do not summarize or omit any dimensions, boundaries, schedules, clauses, or property specifications. The user needs 100% data replication in the final report.
-      2. Perform Automated Financial Math: ${baseRateContext}
-      3. Calculate derived values:
-         - Land Value = Area * Market Rate.
-         - Reconstruction Cost = Standard rate for the property type * Area.
-         - Depreciation = (Age / Total Life) * 0.9 * Reconstruction Cost.
-         - Final Fair Market Value = Land Value + (Reconstruction Cost - Depreciation).
-         - Distress Value = 85% of FMV.
-      4. Ensure all fields required by this schema are present: ${schemaInstruction}. Add any additional fields if interesting details are found in the deed.
-      
-      Output a strict JSON object with all fields and a "reasoning" key explaining your math step-by-step.`,
+          text: `You are a Senior Banking Documentation Officer with 20+ years of experience preparing verification reports, KYC reports, employment verification reports, valuation reports, and loan processing documents.
+
+Your Goals:
+1. EXACT DETAIL EXTRACTION: Extract values for the fields requested in the schema from the provided document. Do not summarize or omit important details.
+2. Ensure all fields required by this schema are present: ${schemaInstruction}.
+3. DOCUMENT PRESERVATION & CONCISENESS RULES:
+   - Only provide the value that belongs inside each field.
+   - Keep answers concise. Use the shortest professional value that satisfies the field.
+   - Prefer short answers and numbers where applicable. This prevents text overflow in tiny table cells.
+   - Every value must fit naturally inside a banking/valuation verification cell without requiring table expansion. Never generate paragraphs or explanatory sentences where a short value is sufficient.
+   - Output short banking values only. Examples of cell output formats:
+     * PAN Match -> MATCHED
+     * Gender Match -> YES
+     * Verification Status -> VERIFIED
+     * Final Result -> POSITIVE
+
+Output a strict JSON object containing ONLY the extracted fields. Do NOT include any "reasoning" key, explanation, or extra text. Output ONLY the raw JSON object conforming exactly to the schema.`,
           cache_control: { type: "ephemeral" }
         }
       ] as any,
@@ -239,11 +221,15 @@ export async function POST(req: NextRequest) {
         // Save report
         await supabase.from('reports').insert({
           user_id: user.id,
-          owner_name: extractedData.ownerName || "Unknown Owner",
-          location: extractedData.propertyAddress || extractedData.location || "N/A",
-          valuation_sum: extractedData.distressValue || extractedData.marketValue || "N/A",
+          owner_name: extractedData.ownerName || extractedData.applicantName || extractedData.customerName || "Unknown Owner",
+          location: extractedData.propertyAddress || extractedData.location || extractedData.address || "N/A",
+          valuation_sum: extractedData.distressValue || extractedData.marketValue || extractedData.loanAmount || extractedData.valuationAmount || "N/A",
           status: "Verified",
-          data: { ...extractedData, _billing: { cost: exactCost, input_tokens: inputTokens, output_tokens: outputTokens } },
+          data: { 
+            ...extractedData, 
+            _schema: schema,
+            _billing: { cost: exactCost, input_tokens: inputTokens, output_tokens: outputTokens } 
+          },
           template: template
         });
 

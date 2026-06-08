@@ -6,10 +6,10 @@ import { FileDown, Loader2 } from "lucide-react";
 interface DownloadButtonProps {
   data: any;
   template: string;
-  surveyNumber?: string;
+  applicantName?: string;
 }
 
-export default function DownloadButton({ data, template, surveyNumber }: DownloadButtonProps) {
+export default function DownloadButton({ data, template, applicantName }: DownloadButtonProps) {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const handleDownload = async () => {
@@ -25,7 +25,8 @@ export default function DownloadButton({ data, template, surveyNumber }: Downloa
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           data: data,
-          template: template 
+          template: template,
+          schema: data?._schema
         }),
       });
       
@@ -34,7 +35,7 @@ export default function DownloadButton({ data, template, surveyNumber }: Downloa
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `Valuation_Report_${surveyNumber || 'Archive'}.pdf`;
+        a.download = `Smart_Consultant_Report_${applicantName || 'Archive'}.pdf`;
         document.body.appendChild(a);
         a.click();
         a.remove();

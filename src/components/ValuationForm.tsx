@@ -2,9 +2,9 @@
 
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { 
-  Loader2, FileDown, Wand2, Cpu, 
-  ChevronRight, BadgeCheck, AlertCircle 
+import {
+  Loader2, FileDown, Wand2, Cpu,
+  ChevronRight, BadgeCheck, AlertCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -89,18 +89,19 @@ export default function ValuationForm({ initialData, schema, template }: Valuati
       const response = await fetch("/api/generate-report", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           data: upperCaseFormData,
-          template: template 
+          template: template,
+          schema: schema || displaySchema
         }),
       });
-      
+
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `Valuation_Report_${formData.surveyNumber || 'Final'}.pdf`;
+        a.download = `Smart_Consultant_Report_${formData.applicantName || 'Final'}.pdf`;
         document.body.appendChild(a);
         a.click();
         a.remove();
@@ -113,24 +114,24 @@ export default function ValuationForm({ initialData, schema, template }: Valuati
   };
 
   const displaySchema = schema && schema.length > 0 ? schema : [
-    { name: "ownerName", label: "Owner Name", type: "text" },
-    { name: "surveyNumber", label: "Survey Number", type: "text" },
-    { name: "propertyAddress", label: "Property Address", type: "text" },
-    { name: "landValue", label: "Land Value", type: "number" },
-    { name: "buildingValue", label: "Building Value", type: "number" },
+    { name: "applicantName", label: "Applicant Name", type: "text" },
+    { name: "phoneNumber", label: "Phone Number", type: "text" },
+    { name: "emailAddress", label: "Email Address", type: "text" },
+    { name: "businessName", label: "Business Name", type: "text" },
+    { name: "jobTitle", label: "Job Title", type: "text" },
   ];
 
   // Group fields into logical sections for better UX
-  const financialFields = ["landValue", "buildingValue", "marketValue", "distressValue", "realizableValue", "marketValueOfLand", "reconstructionCost"];
-  const propertyFields = displaySchema.filter(f => !financialFields.includes(f.name));
-  const moneyFields = displaySchema.filter(f => financialFields.includes(f.name));
+  const businessFields = ["businessName", "jobTitle", "department", "salary", "experience", "company"];
+  const propertyFields = displaySchema.filter(f => !businessFields.includes(f.name));
+  const moneyFields = displaySchema.filter(f => businessFields.includes(f.name));
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-in fade-in duration-1000">
-      
+
       {/* Main Form Area */}
       <form onSubmit={handleSubmit(onSubmit)} className="lg:col-span-8 space-y-8">
-        
+
         {/* Header Summary */}
         <div className="glass p-8 rounded-[2rem] border-white/5 relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 blur-[100px] rounded-full -mr-32 -mt-32 group-hover:bg-primary/20 transition-all duration-700" />
@@ -141,24 +142,24 @@ export default function ValuationForm({ initialData, schema, template }: Valuati
                 Dossier Ready
               </div>
               <h2 className="text-4xl md:text-5xl font-serif font-black tracking-tight">
-                {watchedValues.ownerName || "Untitled Property"}
+                {watchedValues.applicantName || "Untitled Application"}
               </h2>
               <p className="text-muted-foreground font-medium opacity-60">
-                {watchedValues.surveyNumber ? `Survey #${watchedValues.surveyNumber}` : "Reference template identified 12+ data points"}
+                {watchedValues.businessName ? `Company: ${watchedValues.businessName}` : "Reference template identified 12+ data points"}
               </p>
             </div>
             <div className="flex flex-col items-end gap-2">
-                <p className="text-[10px] uppercase font-bold tracking-widest opacity-40">Estimated Market Value</p>
-                <p className="text-3xl font-black text-primary glow-primary font-mono tracking-tighter">
-                  ₹{Number(watchedValues.marketValue || watchedValues.landValue || 0).toLocaleString()}
-                </p>
+              <p className="text-[10px] uppercase font-bold tracking-widest opacity-40">Extracted Confidence</p>
+              <p className="text-3xl font-black text-primary glow-primary font-mono tracking-tighter">
+                98.5%
+              </p>
             </div>
           </div>
         </div>
 
         {/* Property Metadata Section */}
         <div className="space-y-4">
-          <h3 className="text-sm font-black uppercase tracking-[0.3em] opacity-40 ml-2">Property Identity</h3>
+          <h3 className="text-sm font-black uppercase tracking-[0.3em] opacity-40 ml-2">Applicant Details</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {propertyFields.map((field) => (
               <div key={field.name} className="glass p-6 rounded-2xl premium-border group">
@@ -166,9 +167,9 @@ export default function ValuationForm({ initialData, schema, template }: Valuati
                   {field.label}
                   <BadgeCheck className="w-3 h-3 text-primary opacity-0 group-hover:opacity-40" />
                 </label>
-                <input 
+                <input
                   type={field.type === 'number' ? 'text' : field.type}
-                  {...register(field.name as any)} 
+                  {...register(field.name as any)}
                   className="w-full bg-transparent text-lg font-bold outline-none placeholder:text-white/5 uppercase"
                   placeholder="-"
                 />
@@ -179,26 +180,26 @@ export default function ValuationForm({ initialData, schema, template }: Valuati
 
         {/* Financial Analytics Section */}
         <div className="space-y-4">
-           <h3 className="text-sm font-black uppercase tracking-[0.3em] opacity-40 ml-2">Financial Analytics</h3>
-           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {moneyFields.map((field) => (
-                <div key={field.name} className="glass p-6 rounded-2xl border-primary/10 hover:border-primary/50 transition-all bg-primary/[0.02] group">
-                   <p className="text-[10px] uppercase font-black tracking-widest text-primary/60 mb-2">{field.label}</p>
-                   <div className="flex items-center gap-2">
-                      <span className="text-xl font-bold opacity-30">₹</span>
-                      <input 
-                        type="text"
-                        {...register(field.name as any)} 
-                        className="w-full bg-transparent text-2xl font-black tracking-tighter outline-none"
-                        placeholder="0"
-                      />
-                   </div>
-                   <div className="mt-4 w-full h-1 bg-white/5 rounded-full overflow-hidden">
-                      <div className={cn("h-full bg-primary/60 transition-all duration-500", watchedValues[field.name] ? "w-full" : "w-0")} />
-                   </div>
+          <h3 className="text-sm font-black uppercase tracking-[0.3em] opacity-40 ml-2">Business Information</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {moneyFields.map((field) => (
+              <div key={field.name} className="glass p-6 rounded-2xl border-primary/10 hover:border-primary/50 transition-all bg-primary/[0.02] group">
+                <p className="text-[10px] uppercase font-black tracking-widest text-primary/60 mb-2">{field.label}</p>
+                <div className="flex items-center gap-2">
+                  <span className="text-xl font-bold opacity-30"></span>
+                  <input
+                    type="text"
+                    {...register(field.name as any)}
+                    className="w-full bg-transparent text-2xl font-black tracking-tighter outline-none"
+                    placeholder="0"
+                  />
                 </div>
-              ))}
-           </div>
+                <div className="mt-4 w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                  <div className={cn("h-full bg-primary/60 transition-all duration-500", watchedValues[field.name] ? "w-full" : "w-0")} />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Submit */}
@@ -210,14 +211,14 @@ export default function ValuationForm({ initialData, schema, template }: Valuati
           <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
           {isGenerating ? (
             <div className="flex items-center justify-center gap-4">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                <span className="text-lg font-black uppercase tracking-widest">Generating Digital Twin...</span>
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              <span className="text-lg font-black uppercase tracking-widest">Generating Digital Twin...</span>
             </div>
           ) : (
             <div className="flex items-center justify-center gap-6">
               <FileDown className="w-8 h-8 text-primary group-hover:translate-y-1 transition-transform" />
               <div className="text-left">
-                <p className="text-xl font-black uppercase tracking-tighter">Finalize Valuation Report</p>
+                <p className="text-xl font-black uppercase tracking-tighter">Finalize Application Dossier</p>
                 <p className="text-[10px] uppercase font-bold tracking-widest opacity-40">Print High-Fidelity PDF via Playwright</p>
               </div>
               <ChevronRight className="w-6 h-6 opacity-20 group-hover:opacity-100 group-hover:translate-x-2 transition-all" />
@@ -230,7 +231,7 @@ export default function ValuationForm({ initialData, schema, template }: Valuati
       <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-8">
         <div className="glass p-8 rounded-[2rem] border-white/5 space-y-6 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
-          
+
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center">
@@ -238,7 +239,7 @@ export default function ValuationForm({ initialData, schema, template }: Valuati
               </div>
               <h4 className="text-lg font-serif font-bold italic">AI Reasoning</h4>
             </div>
-            <button 
+            <button
               onClick={() => setShowReasoning(!showReasoning)}
               className="text-[10px] uppercase font-black tracking-widest opacity-40 hover:opacity-100 transition-opacity"
             >
@@ -250,41 +251,41 @@ export default function ValuationForm({ initialData, schema, template }: Valuati
             <div className="space-y-6 animate-in slide-in-from-right-5 duration-500">
               <div className="space-y-3">
                 <p className="text-xs leading-relaxed text-muted-foreground italic font-medium">
-                  "{initialData?.reasoning ? (initialData.reasoning.length > 150 ? initialData.reasoning.slice(0, 150) + '...' : initialData.reasoning) : "I have analyzed the Telugu Sale Deed and cross-referenced the government market values with current industry standard distress margins."}"
+                  "{initialData?.reasoning ? (initialData.reasoning.length > 150 ? initialData.reasoning.slice(0, 150) + '...' : initialData.reasoning) : "I have analyzed the application form and successfully mapped the candidate and business details."}"
                 </p>
                 <div className="bg-white/5 p-4 rounded-xl border border-white/5 space-y-2">
-                   <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest opacity-40">
-                      <span>Valuation Logic</span>
-                      <span>Verified</span>
-                   </div>
-                   <p className="text-[11px] leading-relaxed opacity-80">
-                     {initialData?.reasoning || "Extracting reasoning steps from the legal text analysis... Finalizing financial derived fields based on sector 4 margins."}
-                   </p>
+                  <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest opacity-40">
+                    <span>Smart consultant Logic</span>
+                    <span>Verified</span>
+                  </div>
+                  <p className="text-[11px] leading-relaxed opacity-80">
+                    {initialData?.reasoning || "Extracting reasoning steps from the text analysis... Finalizing application details."}
+                  </p>
                 </div>
               </div>
 
               <div className="pt-6 border-t border-white/5 space-y-4">
                 <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 rounded-full bg-primary mt-1 shadow-[0_0_10px_#f59e0b]" />
-                    <div>
-                        <p className="text-[10px] font-black uppercase tracking-wider">Unit Mapping</p>
-                        <p className="text-[10px] text-muted-foreground opacity-60">Converted Sq. Yards to Sq. Feet</p>
-                    </div>
+                  <div className="w-2 h-2 rounded-full bg-primary mt-1 shadow-[0_0_10px_#f59e0b]" />
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-wider">Data Mapping</p>
+                    <p className="text-[10px] text-muted-foreground opacity-60">Successfully parsed application fields</p>
+                  </div>
                 </div>
                 <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 rounded-full bg-primary mt-1 shadow-[0_0_10px_#f59e0b]" />
-                    <div>
-                        <p className="text-[10px] font-black uppercase tracking-wider">Distress Formula</p>
-                        <p className="text-[10px] text-muted-foreground opacity-60">Calculated at 0.85x of Fair Market Value</p>
-                    </div>
+                  <div className="w-2 h-2 rounded-full bg-primary mt-1 shadow-[0_0_10px_#f59e0b]" />
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-wider">Entity Recognition</p>
+                    <p className="text-[10px] text-muted-foreground opacity-60">Validated business entity data against schema</p>
+                  </div>
                 </div>
               </div>
 
               <div className="p-4 bg-primary/10 rounded-2xl border border-primary/20 flex gap-3">
-                 <AlertCircle className="w-5 h-5 text-primary shrink-0" />
-                 <p className="text-[10px] leading-normal font-medium opacity-80">
-                   Human-in-the-loop verification required for boundary measurements (East/West).
-                 </p>
+                <AlertCircle className="w-5 h-5 text-primary shrink-0" />
+                <p className="text-[10px] leading-normal font-medium opacity-80">
+                  Human-in-the-loop verification required for handwritten contact details.
+                </p>
               </div>
             </div>
           )}

@@ -3,77 +3,79 @@ import { chromium } from "playwright";
 
 export async function POST(req: NextRequest) {
   try {
-    const { data, template } = await req.json();
+    const { data = {}, template } = await req.json();
+    const safeData = data || {};
 
-    // The high-fidelity template from Claude analysis, or fallback to a simple one
-    const htmlTemplate = template || `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <script src="https://cdn.tailwindcss.com"></script>
-        <style>
-          @page { size: A4; margin: 20mm; }
-          body { font-family: 'Inter', sans-serif; }
-        </style>
-      </head>
-      <body class="p-8 bg-white text-gray-900">
-        <h1 class="text-3xl font-bold text-blue-800 uppercase mb-8">Valuation Report</h1>
-        <div class="space-y-4">
-          <p><strong>Owner:</strong> ${data.ownerName}</p>
-          <p><strong>Survey:</strong> ${data.surveyNumber}</p>
-          <p><strong>Value:</strong> ₹${data.finalValue?.toLocaleString() || (parseFloat(data.landValue || 0) + parseFloat(data.buildingValue || 0)).toLocaleString()}</p>
-        </div>
-      </body>
-      </html>`;
-
-    // Perform dynamic substitution if using a custom template
-    let finalHtml = htmlTemplate;
-    if (template) {
-      Object.keys(data).forEach(key => {
-        let value = data[key];
-        // If the value is placeholder-like (Not Provided, N/A, etc.) or empty/missing, keep it blank for manual signing
-        if (value === undefined || value === null || value === "" || 
-            /not\s+provided/i.test(String(value)) || 
-            /not\s+applicable/i.test(String(value)) || 
-            /n\/a/i.test(String(value))) {
-          value = "";
-        }
-        const regex = new RegExp(`\\$\\{${key}\\}`, 'g');
-        finalHtml = finalHtml.replace(regex, value);
-      });
-      
-      // Clean up any remaining unsubstituted ${fieldName} placeholders so they don't print raw
-      finalHtml = finalHtml.replace(/\$\{[^}]+\}/g, "");
-      
-      // Clean up empty paragraphs, divs, or excessive breaks that might cause unnecessary spaces between tables
-      finalHtml = finalHtml.replace(/<p[^>]*>\s*<\/p>/gi, "");
-      finalHtml = finalHtml.replace(/<div[^>]*>\s*<\/div>/gi, "");
-      finalHtml = finalHtml.replace(/(<br\s*\/?>\s*){2,}/gi, "<br/>");
+    if (!template) {
+      return NextResponse.json({ error: "No template provided" }, { status: 400 });
     }
 
-    // Launch headless browser
+    console.log("Generating PDF from reconstructed HTML template...");
+    let finalHtml = template;
+
+    // Normalize and replace placeholders like ${fieldName}
+    const normalizeKey = (k: string) => k.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const normalizedData: Record<string, string> = {};
+    Object.keys(safeData).forEach(key => {
+      const norm = normalizeKey(key);
+      if (norm) {
+        normalizedData[norm] = String(safeData[key] !== undefined && safeData[key] !== null ? safeData[key] : "");
+      }
+    });
+
+    const placeholderRegex = /\$\{([^}]+)\}/g;
+    let match;
+    const replacements: Record<string, string> = {};
+    placeholderRegex.lastIndex = 0;
+    while ((match = placeholderRegex.exec(finalHtml)) !== null) {
+      const rawPlaceholder = match[0];
+      const fieldName = match[1];
+      if (safeData[fieldName] !== undefined && safeData[fieldName] !== null) {
+        replacements[rawPlaceholder] = String(safeData[fieldName]);
+      } else {
+        const normFieldName = normalizeKey(fieldName);
+        if (normalizedData[normFieldName] !== undefined) {
+          replacements[rawPlaceholder] = normalizedData[normFieldName];
+        } else {
+          replacements[rawPlaceholder] = "";
+        }
+      }
+    }
+
+    Object.keys(replacements).forEach(placeholder => {
+      finalHtml = finalHtml.replaceAll(placeholder, replacements[placeholder]);
+    });
+    // Remove any remaining unresolved placeholders
+    finalHtml = finalHtml.replace(/\$\{[^}]+\}/g, "");
+
     const browser = await chromium.launch();
     const page = await browser.newPage();
     await page.setContent(finalHtml, { waitUntil: "networkidle" });
 
-    const pdfBuffer = await page.pdf({
+    const pdfOptions: any = {
       format: "A4",
       printBackground: true,
-      margin: { top: "20mm", bottom: "20mm", left: "20mm", right: "20mm" },
-    });
+      margin: {
+        top: "20mm",
+        bottom: "20mm",
+        left: "20mm",
+        right: "20mm"
+      }
+    };
 
+    const pdfBuffer = await page.pdf(pdfOptions);
     await browser.close();
 
     return new NextResponse(new Uint8Array(pdfBuffer), {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="Valuation_Report_${data.surveyNumber}.pdf"`,
+        "Content-Disposition": `attachment; filename="Application_Report_${safeData.applicantName || safeData.ownerName || 'Final'}.pdf"`,
       },
     });
-  } catch (error) {
-    console.error("PDF generation error:", error);
-    return NextResponse.json({ error: "Failed to generate PDF" }, { status: 500 });
+
+  } catch (error: any) {
+    console.error("PDF generation error details:", error);
+    return NextResponse.json({ error: "Failed to generate PDF", details: error.message || String(error) }, { status: 500 });
   }
 }

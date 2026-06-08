@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 export default function Home() {
   const [step, setStep] = useState(1);
   const [templateStatus, setTemplateStatus] = useState<"idle" | "uploading" | "completed">("idle");
-  const [deedStatus, setDeedStatus] = useState<"idle" | "uploading" | "completed">("idle");
+  const [applicationStatus, setApplicationStatus] = useState<"idle" | "uploading" | "completed">("idle");
   const [extractionStatus, setExtractionStatus] = useState<"idle" | "processing" | "completed">("idle");
   const [loadingText, setLoadingText] = useState("");
   const [streamText, setStreamText] = useState("");
@@ -18,7 +18,7 @@ export default function Home() {
   const [tailwindTemplate, setTailwindTemplate] = useState<string>("");
   const [dataSchema, setDataSchema] = useState<any[]>([]);
 
-  const [deedBase64, setDeedBase64] = useState<string>("");
+  const [applicationBase64, setApplicationBase64] = useState<string>("");
 
   const handleTemplateUpload = async (file: File) => {
     setTemplateStatus("uploading");
@@ -40,7 +40,7 @@ export default function Home() {
           if (contentType && contentType.includes("application/json")) {
             setLoadingText("Synthesizing Custom Tailwind Schema...");
             const { tailwindTemplate, dataSchema } = await response.json();
-            setTailwindTemplate(tailwindTemplate);
+            setTailwindTemplate(tailwindTemplate === "ORIGINAL_TEMPLATE_BASE64" ? base64 : tailwindTemplate);
             setDataSchema(dataSchema);
             setTemplateStatus("completed");
             setTimeout(() => setStep(2), 1000);
@@ -67,7 +67,7 @@ export default function Home() {
             try {
               const jsonMatch = rawText.match(/\{[\s\S]*\}/);
               const parsedResult = JSON.parse(jsonMatch ? jsonMatch[0] : rawText);
-              setTailwindTemplate(parsedResult.tailwindTemplate);
+              setTailwindTemplate(parsedResult.tailwindTemplate === "ORIGINAL_TEMPLATE_BASE64" ? base64 : parsedResult.tailwindTemplate);
               setDataSchema(parsedResult.dataSchema);
               setTemplateStatus("completed");
               setTimeout(() => setStep(2), 1000);
@@ -75,7 +75,7 @@ export default function Home() {
               try {
                 const cleaned = rawText.replace(/```json\n?|\n?```/g, "").trim();
                 const parsedResult = JSON.parse(cleaned);
-                setTailwindTemplate(parsedResult.tailwindTemplate);
+                setTailwindTemplate(parsedResult.tailwindTemplate === "ORIGINAL_TEMPLATE_BASE64" ? base64 : parsedResult.tailwindTemplate);
                 setDataSchema(parsedResult.dataSchema);
                 setTemplateStatus("completed");
                 setTimeout(() => setStep(2), 1000);
@@ -97,16 +97,16 @@ export default function Home() {
     }
   };
 
-  const handleDeedUpload = async (file: File) => {
-    setDeedStatus("uploading");
-    setLoadingText("Acquiring Legal Sale Deed...");
+  const handleApplicationUpload = async (file: File) => {
+    setApplicationStatus("uploading");
+    setLoadingText("Acquiring Application Form...");
     const reader = new FileReader();
     reader.onload = async () => {
       const base64 = reader.result as string;
-      setDeedBase64(base64);
-      setDeedStatus("completed");
+      setApplicationBase64(base64);
+      setApplicationStatus("completed");
       setTimeout(() => setStep(3), 1000);
-      // Automatically start extraction after deed upload (no Base Rates input required)
+      // Automatically start extraction after upload (no Base Rates input required)
       await handleStartExtraction(base64);
     };
     reader.readAsDataURL(file);
@@ -114,20 +114,20 @@ export default function Home() {
 
   const handleStartExtraction = async (pdfBase64?: string) => {
     setExtractionStatus("processing");
-    setLoadingText("Extracting Legal Clauses from Telugu Text...");
+    setLoadingText("Extracting Employee & Business Details...");
     try {
       const response = await fetch("/api/extract-data", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-          pdfUrl: pdfBase64 || deedBase64,
+          pdfUrl: pdfBase64 || applicationBase64,
           schema: dataSchema,
           template: tailwindTemplate
         }),
       });
 
       if (response.ok) {
-        setLoadingText("Performing Automated Financial Mathematics...");
+        setLoadingText("Synthesizing Application Data...");
         const data = await response.json();
         setExtractedData(data);
         setExtractionStatus("completed");
@@ -179,7 +179,7 @@ export default function Home() {
               <div className="text-center space-y-4">
                 <h2 className="text-6xl font-serif font-black tracking-tighter leading-tight italic">Reference Synthesis</h2>
                 <p className="text-muted-foreground text-lg max-w-lg mx-auto leading-relaxed">
-                  Upload your target valuation report. Our AI will digitally reconstruct the layout and extract the data structure.
+                  Upload your target application form. Our AI will digitally reconstruct the layout and extract the data structure.
                 </p>
               </div>
               <div className="glass p-4 rounded-[3rem] border-white/5">
@@ -218,19 +218,19 @@ export default function Home() {
               <div className="text-center space-y-4">
                 <h2 className="text-6xl font-serif font-black tracking-tighter italic">Deep Acquisition</h2>
                 <p className="text-muted-foreground text-lg max-w-lg mx-auto leading-relaxed">
-                  Provide the scanned Telugu Sale Deed. We will map the legal reality to your financial digital twin.
+                  Provide the scanned Application Form. We will map the real-world form to your digital dossier.
                 </p>
               </div>
               <div className="glass p-4 rounded-[3rem] border-white/5">
                 <FileUploader 
-                  title="Legal Sale Deed" 
+                  title="Application Form" 
                   description="Upload PDF, DOCX, or image scans"
                   icon="image"
-                  status={deedStatus}
-                  onUpload={handleDeedUpload}
+                  status={applicationStatus}
+                  onUpload={handleApplicationUpload}
                 />
               </div>
-              {deedStatus === "uploading" && (
+              {applicationStatus === "uploading" && (
                 <p className="text-center text-[10px] uppercase font-black tracking-widest text-primary animate-pulse">{loadingText}</p>
               )}
               <button 
@@ -245,9 +245,9 @@ export default function Home() {
           {step === 3 && (
             <div className="space-y-12 animate-in fade-in slide-in-from-bottom-10 duration-1000 max-w-3xl mx-auto">
               <div className="text-center space-y-4">
-                <h2 className="text-6xl font-serif font-black tracking-tighter italic">Processing Realities</h2>
+                <h2 className="text-6xl font-serif font-black tracking-tighter italic">Processing Applications</h2>
                 <p className="text-muted-foreground text-lg max-w-lg mx-auto leading-relaxed">
-                  Our Claude intelligence engine is translating legal Telugu clauses and computing property financials.
+                  Our Claude intelligence engine is extracting employee details and synthesizing business data.
                 </p>
               </div>
 
@@ -259,14 +259,14 @@ export default function Home() {
 
                 <div className="space-y-4 w-full max-w-md">
                   <p className="text-center text-[10px] uppercase font-black tracking-widest text-primary animate-pulse">
-                    {loadingText || "Analyzing Legal Structure..."}
+                    {loadingText || "Analyzing Application Structure..."}
                   </p>
                   
                   {/* Detailed Step-by-Step progress terminal */}
                   <div className="bg-black/60 border border-primary/20 rounded-[2rem] p-6 font-mono text-[10px] space-y-3 leading-relaxed tracking-wider text-primary/70">
                     <div className="flex items-center gap-2">
                       <span className="text-green-500">✔</span>
-                      <span>Acquired Legal Sale Deed Document</span>
+                      <span>Acquired Application Document</span>
                     </div>
                     <div className="flex items-center gap-2">
                       {extractionStatus === "processing" ? (
@@ -275,7 +275,7 @@ export default function Home() {
                         <span className="text-green-500">✔</span>
                       )}
                       <span className={extractionStatus === "processing" ? "text-white font-bold" : ""}>
-                        Extracting Telugu Property Entities & Clauses...
+                        Extracting Employee & Business Entities...
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -284,14 +284,14 @@ export default function Home() {
                       ) : (
                         <span className="text-green-500">✔</span>
                       )}
-                      <span>Executing Derivative Financial Math Algorithms</span>
+                      <span>Synthesizing Application Data</span>
                     </div>
                   </div>
                 </div>
               </div>
 
               <button 
-                onClick={() => { setStep(2); setDeedStatus("idle"); }} 
+                onClick={() => { setStep(2); setApplicationStatus("idle"); }} 
                 className="text-[10px] uppercase font-black tracking-[0.3em] text-primary hover:text-white transition-colors block mx-auto opacity-40 hover:opacity-100"
               >
                 Cancel and Re-upload
@@ -304,7 +304,7 @@ export default function Home() {
               <div className="text-center space-y-4">
                 <h2 className="text-6xl font-serif font-black tracking-tighter italic">Intelligence Review</h2>
                 <p className="text-muted-foreground text-lg max-w-lg mx-auto leading-relaxed">
-                  Validate the AI-calculated financial reasoning before committing to the final artifact.
+                  Validate the AI-extracted application details before committing to the final dossier.
                 </p>
               </div>
               <ValuationForm 
