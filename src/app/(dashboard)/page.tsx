@@ -94,7 +94,8 @@ export default function Home() {
             }
           }
         } else {
-            console.error("Template analysis failed");
+            const errText = await response.text().catch(() => "");
+            console.error("Template analysis failed with status:", response.status, errText);
             setTemplateStatus("idle");
         }
       };
