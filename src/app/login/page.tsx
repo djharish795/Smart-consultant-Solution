@@ -25,7 +25,7 @@ function LoginContent() {
       {/* Background Decor */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none opacity-40">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/20 rounded-full blur-[160px] animate-pulse" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-emerald-900/10 rounded-full blur-[160px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-amber-500/10 rounded-full blur-[160px]" />
       </div>
 
       <div className="w-full max-w-md relative z-10">
@@ -38,10 +38,10 @@ function LoginContent() {
           
           <div className="space-y-2">
             <h1 className="text-4xl font-serif font-black tracking-tight leading-none italic">
-              Valuation<span className="text-primary not-italic">Studio</span>
+              Smart<span className="text-primary not-italic"> Consultant</span>
             </h1>
             <p className="text-[10px] text-muted-foreground uppercase tracking-[0.4em] font-black opacity-60 mt-2 flex items-center justify-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-primary" /> Secure Access Gateway
+              <ShieldCheck className="w-3.5 h-3.5 text-primary" /> Application Gateway
             </p>
           </div>
 

@@ -133,10 +133,11 @@ export async function POST(req: NextRequest) {
       text: "Analyze this valuation report template."
     });
 
-    // This uses Claude Sonnet 4.6 for high-fidelity analysis with better rate limits
+    // This uses Claude 3.5 Haiku or 3.7 Sonnet as configured (defaulting to claude-3-5-haiku-20241022 or fast model)
+    const modelToUse = process.env.CLAUDE_MODEL_FAST || process.env.CLAUDE_MODEL || "claude-3-5-haiku-20241022";
     const response = await anthropic.messages.create({
-      model: process.env.CLAUDE_MODEL || "claude-sonnet-4-6",
-      max_tokens: 64000,
+      model: modelToUse,
+      max_tokens: 16000,
       temperature: 0,
       system: [
         {

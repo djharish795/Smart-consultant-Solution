@@ -18,7 +18,6 @@ export default function Home() {
   const [tailwindTemplate, setTailwindTemplate] = useState<string>("");
   const [dataSchema, setDataSchema] = useState<any[]>([]);
 
-  const [baseRates, setBaseRates] = useState({ marketRate: "", governmentRate: "" });
   const [deedBase64, setDeedBase64] = useState<string>("");
   const [deedFileName, setDeedFileName] = useState<string>("");
   const [extractionError, setExtractionError] = useState<string>("");
@@ -112,26 +111,28 @@ export default function Home() {
     setLoadingText("Acquiring Legal Sale Deed...");
     const reader = new FileReader();
     reader.onload = () => {
-      setDeedBase64(reader.result as string);
+      const base64Data = reader.result as string;
+      setDeedBase64(base64Data);
       setDeedFileName(file.name);
       setDeedStatus("completed");
-      setTimeout(() => setStep(3), 1000);
+      handleStartExtraction(base64Data, file.name);
     };
     reader.readAsDataURL(file);
   };
 
-  const handleStartExtraction = async () => {
+  const handleStartExtraction = async (uploadedDeedBase64?: string, uploadedFileName?: string) => {
+    const deedData = uploadedDeedBase64 || deedBase64;
+    const fileName = uploadedFileName || deedFileName;
     setExtractionStatus("processing");
-    setLoadingText("Extracting Legal Clauses from Telugu Text...");
+    setLoadingText("Extracting Legal Clauses and Property Details...");
     try {
       const response = await fetch("/api/extract-data", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-          pdfUrl: deedBase64,
-          fileName: deedFileName,
+          pdfUrl: deedData,
+          fileName: fileName,
           schema: dataSchema,
-          baseRates: baseRates,
           template: tailwindTemplate
         }),
       });
@@ -141,7 +142,7 @@ export default function Home() {
         const data = await response.json();
         setExtractedData(data);
         setExtractionStatus("completed");
-        setStep(4);
+        setStep(3);
       } else {
         if (response.status === 413) {
           const msg = "File is too large for Vercel Serverless (HTTP 413 Content Too Large). Please upload a document smaller than 3.2MB.";
@@ -163,13 +164,12 @@ export default function Home() {
 
   return (
     <>
-        {/* 5-Step Progress Indicator (Updated) */}
-        <div className="grid grid-cols-4 gap-8 px-8 max-w-4xl mx-auto">
+        {/* 3-Step Progress Indicator */}
+        <div className="grid grid-cols-3 gap-8 px-8 max-w-2xl mx-auto">
           {[
             { id: 1, label: "Template", icon: LayoutDashboard },
             { id: 2, label: "Acquisition", icon: FileCheck },
-            { id: 3, label: "Base Rates", icon: Calculator },
-            { id: 4, label: "Intelligence", icon: Sparkles },
+            { id: 3, label: "Intelligence", icon: Sparkles },
           ].map((s) => (
             <div 
               key={s.id}
@@ -249,8 +249,18 @@ export default function Home() {
                   accept=".pdf,.doc,.docx,.xls,.xlsx"
                 />
               </div>
-              {deedStatus === "uploading" && (
-                <p className="text-center text-[10px] uppercase font-black tracking-widest text-primary animate-pulse">{loadingText}</p>
+              {(deedStatus === "uploading" || extractionStatus === "processing") && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-center gap-2">
+                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                    <p className="text-center text-[10px] uppercase font-black tracking-widest text-primary animate-pulse">{loadingText}</p>
+                  </div>
+                </div>
+              )}
+              {extractionError && (
+                <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs text-center font-medium max-w-md mx-auto">
+                  {extractionError}
+                </div>
               )}
               <button 
                 onClick={() => setStep(1)} 
@@ -262,64 +272,6 @@ export default function Home() {
           )}
 
           {step === 3 && (
-            <div className="space-y-12 animate-in fade-in slide-in-from-bottom-10 duration-1000 max-w-xl mx-auto">
-              <div className="text-center space-y-4">
-                <h2 className="text-6xl font-serif font-black tracking-tighter italic">Base Multipliers</h2>
-                <p className="text-muted-foreground text-lg max-w-lg mx-auto leading-relaxed">
-                  Set the current valuation rates. AI will use these to automate all financial mathematics.
-                </p>
-              </div>
-              <div className="glass p-10 rounded-[3rem] border-white/5 space-y-8">
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <label className="text-[10px] uppercase font-black tracking-widest text-primary">Market Rate (per sq yard/ft)</label>
-                    <input 
-                      type="text" 
-                      value={baseRates.marketRate}
-                      onChange={(e) => setBaseRates({...baseRates, marketRate: e.target.value})}
-                      className="w-full bg-white/5 p-4 rounded-2xl border border-white/10 outline-none focus:border-primary text-xl font-bold"
-                      placeholder="e.g. 5000"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] uppercase font-black tracking-widest text-primary">Government Rate</label>
-                    <input 
-                      type="text" 
-                      value={baseRates.governmentRate}
-                      onChange={(e) => setBaseRates({...baseRates, governmentRate: e.target.value})}
-                      className="w-full bg-white/5 p-4 rounded-2xl border border-white/10 outline-none focus:border-primary text-xl font-bold"
-                      placeholder="e.g. 3200"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <button 
-                    onClick={handleStartExtraction}
-                    disabled={!baseRates.marketRate || extractionStatus === "processing"}
-                    className="w-full py-6 bg-primary text-white rounded-[2rem] font-black text-lg tracking-widest uppercase hover:scale-[1.02] active:scale-95 transition-all shadow-2xl shadow-primary/20 flex items-center justify-center gap-3 disabled:opacity-30"
-                  >
-                    {extractionStatus === "processing" ? <Loader2 className="w-6 h-6 animate-spin" /> : <><Sparkles className="w-6 h-6" /> Process Intelligence</>}
-                  </button>
-                  {extractionStatus === "processing" && (
-                    <p className="text-center text-[10px] uppercase font-black tracking-widest text-primary animate-pulse">{loadingText}</p>
-                  )}
-                  {extractionError && (
-                    <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs text-center font-medium">
-                      {extractionError}
-                    </div>
-                  )}
-                </div>
-              </div>
-              <button 
-                onClick={() => setStep(2)} 
-                className="text-[10px] uppercase font-black tracking-[0.3em] opacity-40 hover:opacity-100 transition-opacity block mx-auto"
-              >
-                Re-upload Document
-              </button>
-            </div>
-          )}
-
-          {step === 4 && (
             <div className="space-y-12 animate-in fade-in zoom-in-95 duration-1000">
               <div className="text-center space-y-4">
                 <h2 className="text-6xl font-serif font-black tracking-tighter italic">Intelligence Review</h2>
@@ -333,10 +285,10 @@ export default function Home() {
                 template={tailwindTemplate} 
               />
               <button 
-                onClick={() => setStep(3)} 
+                onClick={() => setStep(2)} 
                 className="text-[10px] uppercase font-black tracking-[0.3em] text-primary hover:text-white transition-colors block mx-auto opacity-40 hover:opacity-100"
               >
-                Modify Base Rates
+                Re-upload Deed
               </button>
             </div>
           )}

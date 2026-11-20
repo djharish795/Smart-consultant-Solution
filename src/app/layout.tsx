@@ -6,7 +6,7 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
 
 export const metadata: Metadata = {
-  title: "Property Valuation AI | Professional SaaS",
+  title: "Smart Consultant Application",
   description: "Automated property valuation reports for bank-empanelled valuers.",
 };
 

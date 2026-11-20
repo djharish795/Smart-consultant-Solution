@@ -25,8 +25,8 @@ export default function Header() {
           <Sparkles className="text-white w-7 h-7" />
         </div>
         <div>
-          <h1 className="text-3xl font-serif font-black tracking-tight leading-none">Valuation<span className="text-primary italic">Studio</span></h1>
-          <p className="text-[10px] text-muted-foreground uppercase tracking-[0.4em] font-black opacity-40 mt-1">Intelligence Layer 4.6</p>
+          <h1 className="text-3xl font-serif font-black tracking-tight leading-none">Smart<span className="text-primary italic"> Consultant</span></h1>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-[0.4em] font-black opacity-40 mt-1">Application</p>
         </div>
       </div>
       <div className="flex items-center gap-10">

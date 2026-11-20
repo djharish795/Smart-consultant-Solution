@@ -74,7 +74,7 @@ export default async function PricingPage() {
               ))}
             </ul>
             
-            <button className={`w-full py-4 rounded-2xl font-bold uppercase tracking-widest text-xs transition-colors ${plan.active ? 'bg-primary text-white hover:bg-emerald-600' : 'bg-white/5 hover:bg-white/10'}`}>
+            <button className={`w-full py-4 rounded-2xl font-bold uppercase tracking-widest text-xs transition-colors ${plan.active ? 'bg-primary text-black hover:bg-amber-400' : 'bg-white/5 hover:bg-white/10'}`}>
               {plan.cta}
             </button>
           </div>
